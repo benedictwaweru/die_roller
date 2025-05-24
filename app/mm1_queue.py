@@ -6,7 +6,7 @@ QUEUE_LIMIT = 1000
 BUSY = 1
 IDLE = 0
 
-class QueueSimulation:
+class MM1Simulation:
 	def __init__(self):
 		""" State variables """
 		self.next_event_type = 0
@@ -31,6 +31,11 @@ class QueueSimulation:
 		self.input_file = None
 		self.output_file = None
 
+	"""
+	Resets the simulation to its initial state. 
+	Sets the server to IDLE, clears the queue, and initializes statistical accumulators (delays, queue length, server utilization). 
+	Schedules the first arrival event using an exponential distribution.
+	"""
 	def initialize(self):
 		self.simulation_time = 0.0
 
@@ -46,6 +51,11 @@ class QueueSimulation:
 		self.time_next_event[1] = self.simulation_time + self.expon(self.mean_interarrival)
 		self.time_next_event[2] = 1.0e+30
 
+	"""
+	Determines the next event (arrival or departure) by checking the smallest time in time_next_event. 
+	Updates the simulation clock accordingly. 
+	If no events are scheduled, it terminates with an error.
+	"""
 	def timing(self):
 		min_time_next_event = 1.0e+29
 		self.next_event_type = 0
@@ -61,6 +71,12 @@ class QueueSimulation:
 
 		self.simulation_time = min_time_next_event
 
+	"""
+	Handles customer arrivals. 
+	Schedules the next arrival and checks if the server is busy. 
+	If busy, the customer joins the queue (or triggers an overflow error if the queue is full). 
+	If idle, the customer is served immediately, and a departure event is scheduled.
+	"""
 	def arrive(self):
 		self.time_next_event[1] = self.simulation_time + self.expon(self.mean_interarrival)
 
@@ -83,6 +99,12 @@ class QueueSimulation:
 
 			self.time_next_event[2] = self.simulation_time + self.expon(self.mean_service)
 
+	"""
+	Handles customer departures. 
+	If the queue is empty, the server becomes idle.
+	Otherwise, the next customer is dequeued, their delay is recorded, and a new departure event is scheduled. 
+	The queue is shifted forward to fill the gap left by the departed customer.
+	"""
 	def depart(self):
 		if self.num_in_queue == 0:
 			self.server_status = IDLE
@@ -100,12 +122,18 @@ class QueueSimulation:
 			for i in range(1, self.num_in_queue + 1):
 				self.time_arrival[i] = self.time_arrival[i + 1]
 
+	"""
+	Generates a summary report with key statistics
+	"""
 	def report(self):
 		self.output_file.write("\n\nAverage delay in queue{:11.3f} minutes\n\n".format(self.total_of_delays / self.num_custs_delayed))
 		self.output_file.write("Average number in queue{:10.3f}\n\n".format(self.area_num_in_queue / self.simulation_time))
 		self.output_file.write("Server utilization{:15.3f}\n\n".format(self.area_server_status / self.simulation_time))
 		self.output_file.write("Time simulation ended{:12.3f} minutes".format(self.simulation_time))
 
+	"""
+	Updates time-weighted statistics (average queue length and server utilization) by calculating the time elapsed since the last event and multiplying it by the current state (queue length/server status).
+	"""
 	def update_time_avg_stats(self):
 		time_since_last_event = self.simulation_time - self.time_last_event
 		self.time_last_event = self.simulation_time
@@ -113,9 +141,14 @@ class QueueSimulation:
 		self.area_num_in_queue += self.num_in_queue * time_since_last_event
 		self.area_server_status += self.server_status * time_since_last_event
 
+	"""
+	Generates an exponentially distributed random variate using the inverse transform method. 
+	Used to model interarrival and service times.
+	"""
 	def expon(self, mean):
 		return -mean * math.log(random.random())
 	
+	""" Orchestrates the simulation """
 	def main(self):
 		self.input_file = open("mm1_queue.in", "r")
 		self.output_file = open("mm1_queue.out", "w")
@@ -147,5 +180,5 @@ class QueueSimulation:
 		self.output_file.close()
 
 if __name__ == "__main__":
-	simulation = QueueSimulation()
+	simulation = MM1Simulation()
 	simulation.main()

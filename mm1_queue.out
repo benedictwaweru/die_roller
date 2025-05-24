@@ -4,14 +4,14 @@ Mean interarrival time      1.000 minutes
 
 Mean service time           0.500 minutes
 
-Number of customers           100
+Number of customers          1000
 
 
 
-Average delay in queue      0.309 minutes
+Average delay in queue      0.446 minutes
 
-Average number in queue     0.311
+Average number in queue     0.427
 
-Server utilization          0.430
+Server utilization          0.482
 
-Time simulation ended     100.693 minutes
+Time simulation ended    1043.155 minutes
